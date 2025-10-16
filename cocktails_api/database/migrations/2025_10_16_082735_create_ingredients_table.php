@@ -13,6 +13,10 @@ return new class extends Migration
     {
         Schema::create('ingredients', function (Blueprint $table) {
             $table->id();
+            $table->string('name', 50);
+            $table->string('type')->nullable(); //sera tipo de alcohol, si es otra cosa vacio.
+            $table->string('origin')->nullable();
+            $table->enum('classification', ['alcoholic', 'soda', 'juice', 'garnish' ]);
             $table->timestamps();
         });
     }
