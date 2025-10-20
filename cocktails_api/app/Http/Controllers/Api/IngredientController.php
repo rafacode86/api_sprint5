@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use App\Models\Ingredient;
 
 class IngredientController extends Controller
 {
@@ -12,7 +13,7 @@ class IngredientController extends Controller
      */
     public function index()
     {
-        //
+        return response()->json(Ingredient::all(), 200);
     }
 
     /**
@@ -20,7 +21,19 @@ class IngredientController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        $validated = $request->validate([
+            'name' => 'required|string|max:50',
+            'type' => 'nullable|string|max:50',
+            'origin' => 'required|string|max:100',
+            'classification' => 'required|in:alcoholic,soda,juice,garnish'
+        ]);
+
+        $ingredient = Ingredient::create($validated);
+
+        return response()->json([
+            'message' => 'Ingrediente creado correctamente',
+            'ingredient' => $ingredient
+        ], 201);
     }
 
     /**
@@ -28,7 +41,13 @@ class IngredientController extends Controller
      */
     public function show(string $id)
     {
-        //
+        $ingredient = Ingredient::find($id);
+
+        if (!$ingredient) {
+            return response()->json(['message' => 'Ingrediente no encontrado'], 404);
+        }
+
+        return response()->json($ingredient, 200);
     }
 
     /**
@@ -36,7 +55,25 @@ class IngredientController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        //
+        $ingredient = Ingredient::find($id);
+
+        if (!$ingredient) {
+            return response()->json(['message' => 'Ingrediente no encontrado'], 404);
+        }
+
+        $validated = $request->validate([
+            'name' => 'sometimes|required|string|max:50',
+            'type' => 'nullable|string|max:50',
+            'origin' => 'sometimes|required|string|max:100',
+            'classification' => 'sometimes|required|in:alcoholic,soda,juice,garnish'
+        ]);
+
+        $ingredient->update($validated);
+
+        return response()->json([
+            'message' => 'Ingrediente actualizado correctamente',
+            'ingredient' => $ingredient
+        ], 200);
     }
 
     /**
@@ -44,6 +81,14 @@ class IngredientController extends Controller
      */
     public function destroy(string $id)
     {
-        //
+        $ingredient = Ingredient::find($id);
+
+        if (!$ingredient) {
+            return response()->json(['message' => 'Ingrediente no encontrado'], 404);
+        }
+
+        $ingredient->delete();
+
+        return response()->json(['message' => 'Ingrediente eliminado correctamente'], 200);
     }
 }
