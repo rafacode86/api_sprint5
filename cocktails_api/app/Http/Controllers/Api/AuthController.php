@@ -3,28 +3,30 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Models\User;
 use Illuminate\Http\Request;
+use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
+use Illuminate\Http\JsonResponse;
 
 class AuthController extends Controller
 {
-    public function register(Request $request)
+
+    public function register(Request $request): JsonResponse
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
-            'password' => 'required|string|min:8|confirmed',
-            'role' => 'in:admin,user',
+            'password' => 'required|string|min:6|confirmed',
         ]);
 
-        $validated['password'] = bcrypt($validated['password']);
-        $validated['role'] = $validated['role'] ?? 'user';
-        
-        $user = User::create($validated);
-        
+        $user = User::create([
+            'name' => $validated['name'],
+            'email' => $validated['email'],
+            'password' => Hash::make($validated['password']),
+            'role' => 'user',
+        ]);
 
         $token = $user->createToken('API Token')->accessToken;
 
@@ -35,7 +37,8 @@ class AuthController extends Controller
         ], 201);
     }
 
-    public function login(Request $request)
+
+    public function login(Request $request): JsonResponse
     {
         $credentials = $request->validate([
             'email' => 'required|email',
@@ -49,7 +52,6 @@ class AuthController extends Controller
         }
 
         $user = Auth::user();
-
         $token = $user->createToken('API Token')->accessToken;
 
         return response()->json([
@@ -59,17 +61,18 @@ class AuthController extends Controller
         ], 200);
     }
 
-    public function logout(Request $request)
-        {
-        $request->user()->token()->revoke();
+    
+    public function profile($id): JsonResponse
+    {
+        $user = User::findOrFail($id);
 
-        return response()->json([
-            'message' => 'Sesión cerrada correctamente',
-        ]);
+        return response()->json($user);
     }
 
-    public function profile(Request $request)
+    public function logout(Request $request): JsonResponse
     {
-        return response()->json($request->user());
+        $request->user()->token()->revoke();
+
+        return response()->json(['message' => 'Sesión cerrada correctamente']);
     }
 }
