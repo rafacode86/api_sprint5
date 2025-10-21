@@ -9,56 +9,61 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Http\JsonResponse;
-
+use Laravel\Passport\PersonalAccessTokenFactory;
 class AuthController extends Controller
 {
 
     public function register(Request $request): JsonResponse
     {
         $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users',
-            'password' => 'required|string|min:6|confirmed',
-        ]);
+        'name' => 'required|string|max:255',
+        'email' => 'required|string|email|max:255|unique:users',
+        'password' => 'required|string|min:6|confirmed',
+    ]);
 
-        $user = User::create([
-            'name' => $validated['name'],
-            'email' => $validated['email'],
-            'password' => Hash::make($validated['password']),
-            'role' => 'user',
-        ]);
+    $user = User::create([
+        'name' => $validated['name'],
+        'email' => $validated['email'],
+        'password' => Hash::make($validated['password']),
+        'role' => 'user',
+    ]);
 
-        $token = $user->createToken('API Token')->accessToken;
+    $tokenFactory = app(PersonalAccessTokenFactory::class);
+    $tokenResult = $tokenFactory->make($user->id, 'API Token',['*']);
+    $token = $tokenResult->accessToken;
 
-        return response()->json([
-            'message' => 'Usuario registrado correctamente',
-            'user' => $user,
-            'token' => $token,
-        ], 201);
+    return response()->json([
+        'message' => 'Usuario registrado correctamente',
+        'user' => $user,
+        'token' => $token,
+    ], 201);
     }
 
 
     public function login(Request $request): JsonResponse
-    {
+    {   
         $credentials = $request->validate([
-            'email' => 'required|email',
-            'password' => 'required',
+        'email' => 'required|email',
+        'password' => 'required',
+    ]);
+
+    if (!Auth::attempt($credentials)) {
+        throw ValidationException::withMessages([
+            'email' => ['Las credenciales no son válidas.'],
         ]);
+    }
 
-        if (!Auth::attempt($credentials)) {
-            throw ValidationException::withMessages([
-                'email' => ['Las credenciales no son válidas.'],
-            ]);
-        }
+    $user = Auth::user();
 
-        $user = Auth::user();
-        $token = $user->createToken('API Token')->accessToken;
+    $tokenFactory = app(PersonalAccessTokenFactory::class);
+    $tokenResult = $tokenFactory->make($user->id, 'API Token', ['*']);
+    $token = $tokenResult->accessToken;
 
-        return response()->json([
-            'message' => 'Inicio de sesión correcto',
-            'user' => $user,
-            'token' => $token,
-        ], 200);
+    return response()->json([
+        'message' => 'Inicio de sesión correcto',
+        'user' => $user,
+        'token' => $token,
+    ], 200);
     }
 
     
