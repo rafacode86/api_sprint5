@@ -96,7 +96,7 @@ class IngredientTest extends TestCase
             'Authorization' => "Bearer {$this->token}",
         ])->deleteJson("/api/ingredients/{$ingredient->id}");
 
-        // El controlador devuelve 200 con mensaje
+        // El controlador devuelve 200 con mensaje elimnado
         $response->assertStatus(200)
                  ->assertJsonFragment(['message' => 'Ingrediente eliminado correctamente']);
 
