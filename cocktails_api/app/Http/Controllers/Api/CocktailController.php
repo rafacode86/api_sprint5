@@ -9,6 +9,10 @@ use App\Models\Ingredient;
 
 class CocktailController extends Controller
 {
+    public function __construct()
+    {
+        $this->authorizeResource(\App\Models\Cocktail::class, 'cocktail');
+    }
     /**
      * Display a listing of the resource.
      */
@@ -54,27 +58,16 @@ class CocktailController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(string $id)
+    public function show(Cocktail $cocktail)
     {
-        $cocktail = Cocktail::with('ingredients')->find($id);
-
-        if (!$cocktail) {
-            return response()->json(['message' => 'Cóctel no encontrado'], 404);
-        }
-
-        return response()->json($cocktail, 200);
+        return response()->json($cocktail->load('ingredients'), 200);
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $id)
+    public function update(Request $request, Cocktail $cocktail)
     {
-        $cocktail = Cocktail::find($id);
-
-        if (!$cocktail) {
-            return response()->json(['message' => 'Cóctel no encontrado'], 404);
-        }
 
         $validated = $request->validate([
             'name' => 'sometimes|required|string|max:50',
@@ -85,7 +78,7 @@ class CocktailController extends Controller
             'ingredients.*.amount' => 'numeric|min:1'
         ]);
 
-        $cocktail->update($validated);
+    $cocktail->update($validated);
 
         if (!empty($validated['ingredients'])) {
             $cocktail->ingredients()->detach();
@@ -103,14 +96,8 @@ class CocktailController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(string $id)
+    public function destroy(Cocktail $cocktail)
     {
-        $cocktail = Cocktail::find($id);
-
-        if (!$cocktail) {
-            return response()->json(['message' => 'Cóctel no encontrado'], 404);
-        }
-
         $cocktail->ingredients()->detach();
         $cocktail->delete();
 

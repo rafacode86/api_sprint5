@@ -8,6 +8,10 @@ use App\Models\Ingredient;
 
 class IngredientController extends Controller
 {
+    public function __construct()
+    {
+        $this->authorizeResource(Ingredient::class, 'ingredient');
+    }
     /**
      * Display a listing of the resource.
      */
@@ -39,27 +43,16 @@ class IngredientController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(string $id)
+    public function show(Ingredient $ingredient)
     {
-        $ingredient = Ingredient::find($id);
-
-        if (!$ingredient) {
-            return response()->json(['message' => 'Ingrediente no encontrado'], 404);
-        }
-
         return response()->json($ingredient, 200);
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $id)
+    public function update(Request $request, Ingredient $ingredient)
     {
-        $ingredient = Ingredient::find($id);
-
-        if (!$ingredient) {
-            return response()->json(['message' => 'Ingrediente no encontrado'], 404);
-        }
 
         $validated = $request->validate([
             'name' => 'sometimes|required|string|max:50',
@@ -68,7 +61,7 @@ class IngredientController extends Controller
             'classification' => 'sometimes|required|in:alcoholic,soda,juice,garnish'
         ]);
 
-        $ingredient->update($validated);
+    $ingredient->update($validated);
 
         return response()->json([
             'message' => 'Ingrediente actualizado correctamente',
@@ -79,14 +72,8 @@ class IngredientController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(string $id)
+    public function destroy(Ingredient $ingredient)
     {
-        $ingredient = Ingredient::find($id);
-
-        if (!$ingredient) {
-            return response()->json(['message' => 'Ingrediente no encontrado'], 404);
-        }
-
         $ingredient->delete();
 
         return response()->json(['message' => 'Ingrediente eliminado correctamente'], 200);
