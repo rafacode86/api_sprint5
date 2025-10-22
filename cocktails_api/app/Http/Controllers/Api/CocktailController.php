@@ -29,7 +29,7 @@ class CocktailController extends Controller
             'type' => 'required|in:alcoholic,non-alcoholic',
             'ingredients' => 'array',
             'ingredients.*.id' => 'exists:ingredients,id',
-            'ingredients.*.quantity_ml' => 'numeric|min:1'
+            'ingredients.*.amount' => 'numeric|min:1'
         ]);
 
         $cocktail = Cocktail::create([
@@ -41,7 +41,7 @@ class CocktailController extends Controller
         // Si hay ingredientes, los asociamos
         if (!empty($validated['ingredients'])) {
             foreach ($validated['ingredients'] as $ing) {
-                $cocktail->ingredients()->attach($ing['id'], ['quantity_ml' => $ing['quantity_ml']]);
+                $cocktail->ingredients()->attach($ing['id'], ['amount' => $ing['amount']]);
             }
         }
 
@@ -82,7 +82,7 @@ class CocktailController extends Controller
             'type' => 'sometimes|required|in:alcoholic,non-alcoholic',
             'ingredients' => 'array',
             'ingredients.*.id' => 'exists:ingredients,id',
-            'ingredients.*.quantity_ml' => 'numeric|min:1'
+            'ingredients.*.amount' => 'numeric|min:1'
         ]);
 
         $cocktail->update($validated);
@@ -90,7 +90,7 @@ class CocktailController extends Controller
         if (!empty($validated['ingredients'])) {
             $cocktail->ingredients()->detach();
             foreach ($validated['ingredients'] as $ing) {
-                $cocktail->ingredients()->attach($ing['id'], ['quantity_ml' => $ing['quantity_ml']]);
+                $cocktail->ingredients()->attach($ing['id'], ['amount' => $ing['amount']]);
             }
         }
 
